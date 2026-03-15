@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>CleanOps — My Schedule</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="employee.css" />
+</head>
+
+<body>
+
+    <!-- ── SCREEN 1: LOGIN ─────────────────────────── -->
+    <div id="screenLogin" class="screen active">
+        <div class="login-wrap">
+            <div class="login-logo">
+                <div class="logo-icon">✦</div>
+                <span class="logo-name">CleanOps</span>
+            </div>
+            <div class="login-hero">
+                <div class="login-hero-icon">👋</div>
+                <h1 class="login-title">Good morning!</h1>
+                <p class="login-sub">Sign in to see your schedule for today.</p>
+            </div>
+
+            <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
+                <label class="field-label" for="emailInput">Your work email</label>
+                <input id="emailInput" type="email" class="field-input" placeholder="you@cleanops.com"
+                    autocomplete="email" required />
+                <div id="loginError" class="login-error" style="display:none">
+                    ⚠️ No schedule found for that email. Try another.
+                </div>
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span id="loginBtnText">View My Schedule →</span>
+                </button>
+            </form>
+
+            <div class="demo-hint">
+                <div class="demo-hint-label">Demo logins:</div>
+                <div class="demo-emails" id="demoEmails">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── SCREEN 2: JOB VIEW ──────────────────────── -->
+    <div id="screenJob" class="screen">
+        <div class="job-wrap">
+
+            <!-- Header -->
+            <div class="job-header">
+                <div class="job-header-left">
+                    <div class="emp-avatar-sm" id="jobEmpAvatar">MS</div>
+                    <div>
+                        <div class="emp-header-name" id="jobEmpName">Maria Santos</div>
+                        <div class="emp-header-role" id="jobEmpRole">Lead Cleaner</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="handleLogout()">Sign out</button>
+            </div>
+
+            <!-- Date chip -->
+            <div class="job-date-chip">
+                <span>📅</span>
+                <span id="jobDate">Today</span>
+            </div>
+
+            <!-- Job card -->
+            <div class="job-card-main" id="jobCard">
+                <div class="job-card-type" id="jobType">Standard Clean</div>
+                <div class="job-card-client" id="jobClient">Hartwell House</div>
+                <div class="job-card-address" id="jobAddress">124 Maple St</div>
+
+                <div class="job-card-details">
+                    <div class="job-detail">
+                        <span class="job-detail-icon">⏰</span>
+                        <div>
+                            <div class="job-detail-label">Start Time</div>
+                            <div class="job-detail-val" id="jobTime">8:00 AM</div>
+                        </div>
+                    </div>
+                    <div class="job-detail">
+                        <span class="job-detail-icon">📍</span>
+                        <div>
+                            <div class="job-detail-label">Location</div>
+                            <div class="job-detail-val" id="jobType2">Standard</div>
+                        </div>
+                    </div>
+                </div>
+
+                <a id="mapsLink" class="btn-maps" href="#" target="_blank" rel="noopener">
+                    <span>🗺️</span>
+                    <span>Open in Maps</span>
+                    <span class="maps-arrow">↗</span>
+                </a>
+            </div>
+
+            <!-- Status banner (shows after start) -->
+            <div id="statusBanner" class="status-banner" style="display:none">
+                <div class="status-dot"></div>
+                <div id="statusBannerText">Job in progress…</div>
+            </div>
+
+            <!-- Big action button -->
+            <div class="action-area">
+                <button id="actionBtn" class="btn-action btn-start" onclick="handleAction()">
+                    <span id="actionBtnIcon">▶</span>
+                    <span id="actionBtnText">START JOB</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── SCREEN 3: SUCCESS ───────────────────────── -->
+    <div id="screenSuccess" class="screen">
+        <div class="success-wrap">
+            <div class="success-confetti" id="confetti"></div>
+            <div class="success-icon">🎉</div>
+            <h1 class="success-title">Great job!</h1>
+            <p class="success-msg">Your update has been sent<br />to the office.</p>
+
+            <div class="success-job-recap" id="successRecap">
+                <div class="recap-label">Job completed</div>
+                <div class="recap-client" id="recapClient">Hartwell House</div>
+                <div class="recap-time" id="recapTime">Completed at 9:42 AM</div>
+            </div>
+
+            <button class="btn-done" onclick="handleLogout()">Done for today ✓</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="data-service.js"></script>
+    <script src="employee.js?v=2"></script>
+</body>
+
+</html>

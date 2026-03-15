@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CleanOps — Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <!-- DASHBOARD WRAPPER -->
+  <div id="mainDashboard" style="display:none">
+    <!-- TOP NAV -->
+    <header class="topnav">
+      <div class="topnav-left">
+        <div class="topnav-brand">
+          <div class="brand-icon">✦</div>
+          <span class="brand-name">CleanOps</span>
+          <span class="brand-tag">Admin</span>
+        </div>
+        <div class="date-badge">
+          <span class="date-icon">📅</span>
+          <span id="todayDate">Today</span>
+        </div>
+      </div>
+      <div class="topnav-right">
+        <div class="progress-chip">
+          <span class="progress-chip-label">Completed</span>
+          <span id="completedCount" class="progress-chip-num">0</span>
+          <span class="progress-chip-sep">/</span>
+          <span class="progress-chip-total">20</span>
+        </div>
+        <button id="dispatchBtn" class="btn-dispatch" onclick="openDispatchModal()">
+          <span class="dispatch-icon">🚀</span>
+          <span>Bulk Dispatch</span>
+        </button>
+        <button class="btn-logout-nav" onclick="handleLogout()">Logout</button>
+      </div>
+    </header>
+
+
+    <!-- MAIN LAYOUT -->
+    <main class="main-layout">
+
+      <!-- SIDEBAR: Unassigned Jobs -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2 class="sidebar-title">Unassigned Jobs</h2>
+          <div class="sidebar-header-actions">
+            <button class="btn-icon-sm" onclick="openCreateJobModal()" title="Create New Job">＋</button>
+            <span id="unassignedBadge" class="badge badge-warn">0</span>
+          </div>
+        </div>
+        <p class="sidebar-subtitle">Today's jobs without an employee</p>
+        <div id="unassignedList" class="unassigned-list">
+          <!-- Populated by JS -->
+        </div>
+      </aside>
+
+      <!-- CONTENT AREA -->
+      <section class="content-area">
+
+        <!-- PROGRESS BAR SECTION -->
+        <div class="progress-section">
+          <div class="progress-header">
+            <div>
+              <h2 class="progress-title">Today's Progress</h2>
+              <p class="progress-subtitle">Track job completions across all employees</p>
+            </div>
+            <div class="progress-stats">
+              <div class="stat-block">
+                <span id="statAssigned" class="stat-num">0</span>
+                <span class="stat-label">Assigned</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-block">
+                <span id="statCompleted" class="stat-num">0</span>
+                <span class="stat-label">Completed</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-block">
+                <span id="statUnassigned" class="stat-num">0</span>
+                <span class="stat-label">Unassigned</span>
+              </div>
+            </div>
+          </div>
+          <div class="progress-bar-track">
+            <div id="progressBarFill" class="progress-bar-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-bar-labels">
+            <span>Jobs Completed: <strong id="barLabel">0 / 20</strong></span>
+            <span id="barPercent" class="progress-pct">0%</span>
+          </div>
+        </div>
+
+        <!-- DASHBOARD GRID: Grid + Activity -->
+        <div class="dashboard-main-grid">
+
+          <!-- LEFT: Employee Grid -->
+          <div class="employee-grid-section">
+            <div class="employee-grid-header">
+              <h2 class="section-title">Employee Grid</h2>
+              <div class="grid-filters">
+                <input type="text" id="employeeSearch" class="search-input" placeholder="🔍  Search employees…"
+                  oninput="filterEmployees()" />
+                <select id="filterStatus" class="filter-select" onchange="filterEmployees()">
+                  <option value="all">All Statuses</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="unassigned">Unassigned</option>
+                  <option value="completed">Completed</option>
+                  <option value="dispatched">Dispatched</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="employeeGrid" class="employee-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- RIGHT: Latest Activity Feed -->
+          <aside class="activity-log-section">
+            <div class="activity-log-header">
+              <h2 class="section-title">Latest Activity</h2>
+              <span class="activity-badge-new" id="activityNewCount" style="display:none">0 New</span>
+            </div>
+            <div id="activityLogList" class="activity-log-list">
+              <div class="activity-empty">
+                <p>No activity recorded yet today.</p>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+    </main>
+
+    <!-- DISPATCH MODAL -->
+    <div id="dispatchModal" class="modal-overlay" onclick="closeModalOutside(event)">
+      <div class="modal-card">
+        <div class="modal-icon">🚀</div>
+        <h2 class="modal-title">Publish Today's Schedule?</h2>
+        <p class="modal-body">This will send a push notification to all <strong>20 employees</strong>:</p>
+        <div class="notification-preview">
+          <div class="notif-app">CleanOps</div>
+          <div class="notif-msg">"Your schedule for today is ready! Tap to view."</div>
+        </div>
+        <div id="modalAssignWarning" class="modal-warning" style="display:none">
+          ⚠️ <span id="modalWarnText"></span> jobs are still unassigned. You can still publish.
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeDispatchModal()">Cancel</button>
+          <button class="btn-primary" onclick="executeDispatch()">
+            <span>📣</span> Send Notifications
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISPATCH SUCCESS TOAST -->
+    <div id="toast" class="toast">
+      <span class="toast-icon">✅</span>
+      <span id="toastMsg">Notifications sent to all 20 employees!</span>
+    </div>
+
+    <!-- SUCCESS BANNER -->
+    <div id="successBanner" class="success-banner">
+      <div class="success-banner-inner">
+        <div class="success-banner-icon">📣</div>
+        <div class="success-banner-title">20 Schedules Sent!</div>
+        <div class="success-banner-sub">All employees have been notified. Today's schedule is live.</div>
+      </div>
+    </div>
+
+    <!-- CREATE JOB MODAL -->
+    <div id="createJobModal" class="modal-overlay" onclick="closeCreateJobModalOutside(event)">
+      <div class="modal-card modal-large">
+        <div class="modal-header">
+          <h2 class="modal-title">Create New Job</h2>
+          <button class="btn-close" onclick="closeCreateJobModal()">✕</button>
+        </div>
+        <form id="createJobForm" class="job-form" onsubmit="handleCreateJob(event)">
+          <div class="form-section">
+            <h3 class="form-section-title">Client Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" name="firstName" required placeholder="John">
+              </div>
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" name="lastName" required placeholder="Doe">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required placeholder="(555) 000-0000">
+              </div>
+              <div class="form-group">
+                <label for="address">Service Address</label>
+                <input type="text" id="address" name="address" required placeholder="123 Street Ave">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="form-section-title">Property Details</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="bedrooms">Bedrooms</label>
+                <input type="number" id="bedrooms" name="bedrooms" min="0" required value="0">
+              </div>
+              <div class="form-group">
+                <label for="bathrooms">Bathrooms</label>
+                <input type="number" id="bathrooms" name="bathrooms" min="0" step="0.5" required value="0">
+              </div>
+              <div class="form-group">
+                <label for="sqft">Square Footage</label>
+                <input type="number" id="sqft" name="sqft" min="0" required placeholder="e.g. 2000">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="form-section-title">Access & Assignment</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="serviceType">Service Type</label>
+                <select id="serviceType" name="serviceType" required class="select-service-type">
+                  <option value="Regular Clean">Regular Clean</option>
+                  <option value="Deep Clean">Deep Clean</option>
+                  <option value="Move-Out Clean">Move-Out Clean</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="jobTime">Preferred Time</label>
+                <input type="time" id="jobTime" name="jobTime" required>
+              </div>
+              <div class="form-group">
+                <label for="assignStaff">Assign Staff (Optional)</label>
+                <input type="text" id="assignStaff" name="assignStaff" list="staffList" placeholder="Search staff...">
+                <datalist id="staffList">
+                  <!-- Will be populated via JS -->
+                </datalist>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="accessInfo">Access Info (Gate codes, etc.)</label>
+                <input type="text" id="accessInfo" name="accessInfo" placeholder="Gate code: 1234">
+              </div>
+              <div class="form-group">
+                <label for="pets">Pets & Names</label>
+                <input type="text" id="pets" name="pets" placeholder="Dog (Max)">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="notes">Extras / Special Notes</label>
+              <textarea id="notes" name="notes" rows="3" placeholder="Window cleaning requested..."></textarea>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeCreateJobModal()">Cancel</button>
+            <button type="submit" class="btn-primary">Create Job</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div id="adminLoginScreen" class="login-screen active">
+    <div class="login-container">
+      <div class="login-branding">
+        <div class="brand-logo-glow"></div>
+        <div class="brand-logo-inner">
+          <span class="brand-icon-large">✦</span>
+          <h1 class="brand-title">CleanOps</h1>
+          <p class="brand-subtitle">Casey's Professional Cleaning Services</p>
+        </div>
+      </div>
+
+      <div class="login-card-glass">
+        <div class="login-header">
+          <h2>Manager Login</h2>
+          <p>Enter your credentials to access the portal</p>
+        </div>
+
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+          <div class="input-group-premium">
+            <label for="adminEmail">Email Address</label>
+            <div class="input-wrapper">
+              <span class="input-icon">✉</span>
+              <input type="email" id="adminEmail" required placeholder="manager@cleanops.com">
+            </div>
+          </div>
+
+          <div class="input-group-premium">
+            <label for="adminPassword">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="adminPassword" required placeholder="••••••••">
+            </div>
+          </div>
+
+          <div id="loginErrorMessage" class="error-text" style="display:none">
+            ⚠️ Invalid email or password.
+          </div>
+
+          <button type="submit" class="btn-login-premium">
+            <span>Login to Dashboard</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <p>Secure Admin Portal · &copy; 2026</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="data-service.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
