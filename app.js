@@ -226,7 +226,15 @@ function avatarGradient(id) {
     'linear-gradient(135deg,#14b8a6,#2dd4bf)',
     'linear-gradient(135deg,#8b5cf6,#c084fc)',
   ];
-  return palette[(id - 1) % palette.length];
+  
+  // Use a simple hash for UUID strings to pick a consistent color
+  let hash = 0;
+  const str = String(id || '0');
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return palette[Math.abs(hash) % palette.length];
 }
 
 // ─── INTERACTIONS ──────────────────────────────────────────────────────────────
@@ -292,7 +300,7 @@ function updateProgress() {
     if (a.status === 'completed') { assigned++; completed++; }
   });
   const unassigned = EMPLOYEES.length - assigned;
-  const pct = Math.round((completed / EMPLOYEES.length) * 100);
+  const pct = EMPLOYEES.length > 0 ? Math.round((completed / EMPLOYEES.length) * 100) : 0;
 
   document.getElementById('statAssigned').textContent = assigned;
   document.getElementById('statCompleted').textContent = completed;
