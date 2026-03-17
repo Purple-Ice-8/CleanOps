@@ -134,8 +134,8 @@ function renderUnassignedJobs() {
           </div>
         </div>
         <div class="job-card-actions">
-          <button class="btn-delete-job" onclick="deleteJob(${job.id}, this)" title="Delete Job">🗑️</button>
-          <button class="btn-edit-job" onclick="openCreateJobModal(${job.id})" title="Edit Job Details">✎</button>
+          <button class="btn-delete-job" onclick="deleteJob('${job.id}', this)" title="Delete Job">🗑️</button>
+          <button class="btn-edit-job" onclick="openCreateJobModal('${job.id}')" title="Edit Job Details">✎</button>
         </div>
       </div>
     `;
@@ -189,14 +189,14 @@ function renderEmployeeCard(emp) {
         ? `
         <div class="emp-assigned-job">
           🏠 ${getJobLabel(currentJobId)}
-          <button class="btn-delete-job" onclick="deleteJob(${currentJobId}, this)" title="Delete Job" style="opacity:1; transform:none; position:relative; margin-left:8px; font-size:12px;">🗑️</button>
+          <button class="btn-delete-job" onclick="deleteJob('${currentJobId}', this)" title="Delete Job" style="opacity:1; transform:none; position:relative; margin-left:8px; font-size:12px;">🗑️</button>
         </div>
         <div class="emp-actions">
-          <button class="btn-complete" onclick="markCompleted(${emp.id})">✔ Mark Complete</button>
-          <button class="btn-clear" onclick="clearAssignment(${emp.id})" title="Unassign">✕</button>
+          <button class="btn-complete" onclick="markCompleted('${emp.id}')">✔ Mark Complete</button>
+          <button class="btn-clear" onclick="clearAssignment('${emp.id}')" title="Unassign">✕</button>
         </div>`
         : `
-        <select class="emp-job-select" onchange="assignJob(${emp.id}, this.value)" id="sel-${emp.id}">
+        <select class="emp-job-select" onchange="assignJob('${emp.id}', this.value)" id="sel-${emp.id}">
           <option value="">— Select a job —</option>
           ${optionsList}
         </select>`;
@@ -323,6 +323,7 @@ function openDispatchModal() {
   } else {
     warn.style.display = 'none';
   }
+  document.getElementById('dispatchEmpCount').textContent = `${EMPLOYEES.length} employees`;
   document.getElementById('dispatchModal').classList.add('open');
 }
 
