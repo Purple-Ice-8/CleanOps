@@ -70,7 +70,12 @@ async function initializeData() {
     JOBS.forEach(job => {
       if (job.assignments && job.assignments.length > 0) {
         job.assignments.forEach(asgn => {
-          assignments[asgn.employee_id] = { jobId: job.id, status: job.status };
+          let uiStatus = 'assigned';
+          if (job.status === 'completed') uiStatus = 'completed';
+          else if (job.status === 'in_progress') uiStatus = 'in_progress';
+          else if (job.dispatched_at) uiStatus = 'dispatched';
+          
+          assignments[asgn.employee_id] = { jobId: job.id, status: uiStatus };
           jobAssigned[job.id] = true;
         });
       }
@@ -296,8 +301,9 @@ function updateProgress() {
   EMPLOYEES.forEach(emp => {
     const a = assignments[emp.id];
     if (!a) return;
-    if (a.status === 'assigned' || a.status === 'dispatched') assigned++;
-    if (a.status === 'completed') { assigned++; completed++; }
+    // Any assignment (assigned, in_progress, dispatched, completed) counts as 'assigned'
+    assigned++;
+    if (a.status === 'completed') completed++;
   });
   const unassigned = EMPLOYEES.length - assigned;
   const pct = EMPLOYEES.length > 0 ? Math.round((completed / EMPLOYEES.length) * 100) : 0;
