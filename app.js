@@ -387,9 +387,10 @@ function showToast(msg) {
 }
 
 function showDispatchSuccess() {
-  // ── Banner: swap the modal area for a big success banner overlay
   const banner = document.getElementById('successBanner');
   if (banner) {
+    const bannerTitle = document.getElementById('successBannerTitle');
+    if (bannerTitle) bannerTitle.textContent = `${EMPLOYEES.length} Schedules Sent!`;
     banner.classList.add('show');
     setTimeout(() => banner.classList.remove('show'), 5000);
   }
