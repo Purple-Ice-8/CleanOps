@@ -297,24 +297,26 @@ function refreshUI() {
 // ─── PROGRESS ─────────────────────────────────────────────────────────────────
 
 function updateProgress() {
-  let assigned = 0, completed = 0;
-  EMPLOYEES.forEach(emp => {
-    const a = assignments[emp.id];
-    if (!a) return;
-    // Any assignment (assigned, in_progress, dispatched, completed) counts as 'assigned'
-    assigned++;
-    if (a.status === 'completed') completed++;
+  let assignedCount = 0, completedCount = 0;
+  JOBS.forEach(job => {
+    if (jobAssigned[job.id]) assignedCount++;
+    if (job.status === 'completed') completedCount++;
   });
-  const unassigned = EMPLOYEES.length - assigned;
-  const pct = EMPLOYEES.length > 0 ? Math.round((completed / EMPLOYEES.length) * 100) : 0;
+  
+  const unassignedJobs = JOBS.length - assignedCount;
+  const pct = JOBS.length > 0 ? Math.round((completedCount / JOBS.length) * 100) : 0;
 
-  document.getElementById('statAssigned').textContent = assigned;
-  document.getElementById('statCompleted').textContent = completed;
-  document.getElementById('statUnassigned').textContent = unassigned;
+  document.getElementById('statAssigned').textContent = assignedCount;
+  document.getElementById('statCompleted').textContent = completedCount;
+  document.getElementById('statUnassigned').textContent = unassignedJobs;
   document.getElementById('progressBarFill').style.width = pct + '%';
-  document.getElementById('barLabel').textContent = `${completed} / ${EMPLOYEES.length}`;
+  document.getElementById('barLabel').textContent = `${completedCount} / ${JOBS.length}`;
   document.getElementById('barPercent').textContent = pct + '%';
-  document.getElementById('completedCount').textContent = completed;
+  document.getElementById('completedCount').textContent = completedCount;
+
+  // Top nav total
+  const topTotal = document.getElementById('topNavTotal');
+  if (topTotal) topTotal.textContent = JOBS.length;
 }
 
 // ─── DISPATCH MODAL ────────────────────────────────────────────────────────────
@@ -374,10 +376,10 @@ async function executeDispatch() {
 
     await window.DataService.addLog(null, 'dispatched', 'schedule', null, { 
       actor: adminName, 
-      count: EMPLOYEES.length 
     });
-
-    // Success UI
+    // 2. Local State
+    const dispatchedCount = JOBS.filter(j => jobAssigned[j.id]).length;
+    showToast(`✅ Notifications sent for ${dispatchedCount} assignments!`);
     showDispatchSuccess();
   } catch (err) {
     console.error("Dispatch failed:", err);
@@ -396,7 +398,8 @@ function showDispatchSuccess() {
   const banner = document.getElementById('successBanner');
   if (banner) {
     const bannerTitle = document.getElementById('successBannerTitle');
-    if (bannerTitle) bannerTitle.textContent = `${EMPLOYEES.length} Schedules Sent!`;
+    const dispatchedCount = JOBS.filter(j => jobAssigned[j.id]).length;
+    if (bannerTitle) bannerTitle.textContent = `${dispatchedCount} Schedules Sent!`;
     banner.classList.add('show');
     setTimeout(() => banner.classList.remove('show'), 5000);
   }
