@@ -529,24 +529,31 @@ async function handleCreateJob(e) {
   const formData = new FormData(e.target);
 
   try {
-    // 1. Handle Client (Simplified: Always create or find by name for demo)
-    // In a real app, we'd have a client picker or search.
+    // 1. Handle Client
     const firstName = formData.get('firstName');
     const lastName = formData.get('lastName');
     
-    // Attempt to find or create client
+    console.log(`[CleanOps] Finding/Creating client: ${firstName} ${lastName}`);
+    
     let client_id;
-    const { data: clients } = await window.supabase
+    const { data: clients, error: searchError } = await window.supabase
       .from('clients')
       .select('client_id')
       .eq('first_name', firstName)
       .eq('last_name', lastName)
       .limit(1);
     
+    if (searchError) {
+      console.error("[CleanOps] Client search error:", searchError);
+      throw new Error(`Failed to search for client: ${searchError.message}`);
+    }
+    
     if (clients && clients.length > 0) {
       client_id = clients[0].client_id;
+      console.log("[CleanOps] Found existing client:", client_id);
     } else {
-      const { data: newClient } = await window.supabase
+      console.log("[CleanOps] Creating new client...");
+      const { data: newClient, error: createError } = await window.supabase
         .from('clients')
         .insert([{
           first_name: firstName,
@@ -560,7 +567,13 @@ async function handleCreateJob(e) {
         }])
         .select()
         .single();
+      
+      if (createError) {
+        console.error("[CleanOps] Client creation error:", createError);
+        throw new Error(`Failed to create client: ${createError.message}`);
+      }
       client_id = newClient.client_id;
+      console.log("[CleanOps] Created new client:", client_id);
     }
 
     const jobData = {
@@ -569,17 +582,37 @@ async function handleCreateJob(e) {
       clean_type: formData.get('serviceType'),
       scheduled_date: new Date().toISOString().split('T')[0], // Today
       scheduled_time: formData.get('jobTime'),
-      instructions: formData.get('accessInfo') + ' ' + formData.get('pets')
+      instructions: (formData.get('accessInfo') || '') + ' ' + (formData.get('pets') || '')
     };
 
     let jobId = editingJobId;
 
     if (editingJobId) {
-      await window.DataService.updateJob(editingJobId, jobData);
+      console.log("[CleanOps] Updating existing job:", editingJobId);
+      const { error: updateError } = await window.supabase
+        .from('cleaning_jobs')
+        .update(jobData)
+        .eq('job_id', editingJobId);
+        
+      if (updateError) {
+        console.error("[CleanOps] Job update error:", updateError);
+        throw new Error(`Failed to update job: ${updateError.message}`);
+      }
       showToast('✅ Job details updated!');
     } else {
-      const newJob = await window.DataService.createJob(jobData);
+      console.log("[CleanOps] Creating new job...");
+      const { data: newJob, error: jobError } = await window.supabase
+        .from('cleaning_jobs')
+        .insert([jobData])
+        .select()
+        .single();
+        
+      if (jobError) {
+        console.error("[CleanOps] Job creation error:", jobError);
+        throw new Error(`Failed to create job: ${jobError.message}`);
+      }
       jobId = newJob.job_id;
+      console.log("[CleanOps] Created new job:", jobId);
       showToast('✨ New job created successfully!');
     }
 
@@ -588,16 +621,17 @@ async function handleCreateJob(e) {
     const employee = EMPLOYEES.find(emp => emp.name === staffName);
 
     if (employee) {
+      console.log("[CleanOps] Assigning staff:", employee.name);
       await window.DataService.assignEmployeeToJob(jobId, employee.id);
     } else {
+      console.log("[CleanOps] No staff assigned or clearing assignment");
       await window.DataService.clearAllAssignmentsForJob(jobId);
     }
 
     closeCreateJobModal();
-    // UI will refresh via Realtime
   } catch (err) {
-    console.error("Failed to save job:", err);
-    showToast("❌ Failed to save job");
+    console.error("[CleanOps] Critical failure in handleCreateJob:", err);
+    showToast(`❌ Error: ${err.message || 'Failed to save job'}`);
   }
 }
 
